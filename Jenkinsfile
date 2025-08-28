@@ -1,27 +1,41 @@
 pipeline {
-    agent {
-        docker {
-            image 'maven:3.9.4-openjdk-17'
-            args '-v $HOME/.m2:/root/.m2'
-        }
+    agent any
+
+    parameters {
+        string(name: 'BUILD_NUMBER_INPUT', defaultValue: '', description: 'Enter the current build number')
     }
+
     stages {
         stage('Build') {
+            when {
+                branch 'development'
+            }
             steps {
-                sh 'mvn clean package'
+                echo 'Building the project... (only on development branch)'
+                // Add your build commands here, e.g.:
+                // sh 'make build'
             }
         }
+
         stage('Test') {
             steps {
-                sh 'mvn test'
+                echo 'Running tests... (on all branches)'
+                // Add your test commands here, e.g.:
+                // sh 'make test'
             }
         }
-        stage('Deploy Test') {
-            when {
-                branch 'main'
-            }
+
+        stage('Deploy') {
             steps {
-                echo 'Deploy commands here'
+                script {
+                    if (params.BUILD_NUMBER_INPUT?.trim()) {
+                        echo "Deploying build number: ${params.BUILD_NUMBER_INPUT}"
+                        // Add your deploy commands here, e.g.:
+                        // sh "deploy.sh --build ${params.BUILD_NUMBER_INPUT}"
+                    } else {
+                        error("Build number not provided! Please provide BUILD_NUMBER_INPUT parameter.")
+                    }
+                }
             }
         }
     }
